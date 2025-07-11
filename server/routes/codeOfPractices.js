@@ -1,28 +1,51 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../config/db');
-const { codeOfPractices } = require('../models'); // ✅ if that's the key name
+const codeOfPractices  = require('../models'); // ✅ if that's the key name
 const { Op } = require('sequelize');
+const yup = require('yup');
 
 // CREATE a new code of practice
-router.post('/', async (req, res) => {
+router.post("/", async (req, res) => {
+  const data = req.body;
+
+  // Yup validation schema
+  const validationSchema = yup.object({
+    title: yup.string().trim().min(3).max(100).required(),
+    description: yup.string().trim().min(3).max(500).required(),
+    authority: yup.string().trim().min(2).max(100).required(),
+    url: yup.string().url().required(),
+  });
+
   try {
-    const { title, description } = req.body;
+    const validated = await validationSchema.validate(data, { abortEarly: false });
+
     const [result] = await db.execute(
-      'INSERT INTO cop (title, description) VALUES (?, ?)',
-      [title, description]
+      'INSERT INTO cop (title, description, authority, url) VALUES (?, ?, ?, ?)',
+      [validated.title, validated.description, validated.authority, validated.url]
     );
-    res.status(201).json({ id: result.insertId, title, description });
+
+    res.status(201).json({
+      id: result.insertId,
+      ...validated,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Yup validation errors
+    if (err.name === 'ValidationError') {
+      res.status(400).json({ errors: err.errors });
+    } else {
+      res.status(500).json({ error: err.message });
+    }
   }
 });
 
 // READ all codes of practice
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const [rows] = await db.execute('SELECT * FROM cop');
-    res.json(rows);
+    let list = await codeOfPractices.findAll({
+      order: [['createdAt', 'DESC']]
+    });
+    res.json(list);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

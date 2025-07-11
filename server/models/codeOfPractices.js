@@ -1,5 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
-    const CodeOfPractice = sequelize.define("CodeOfPractice", {
+    const codeOfPractice = sequelize.define("CodeOfPractice", {
         title: {
             type: DataTypes.STRING(100),
             allowNull: false
@@ -20,5 +20,5 @@ module.exports = (sequelize, DataTypes) => {
         tableName: 'cop'
     });
 
-    return CodeOfPractice;
+    return codeOfPractice;
 };
