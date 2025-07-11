@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../config/db');
-const codeOfPractices  = require('../models'); // ✅ if that's the key name
+const { codeOfPractice } = require('../models'); // ✅ if that's the key name
 const { Op } = require('sequelize');
 const yup = require('yup');
 
@@ -42,7 +42,7 @@ router.post("/", async (req, res) => {
 // READ all codes of practice
 router.get("/", async (req, res) => {
   try {
-    let list = await codeOfPractices.findAll({
+    let list = await codeOfPractice.findAll({
       order: [['createdAt', 'DESC']]
     });
     res.json(list);
@@ -53,18 +53,10 @@ router.get("/", async (req, res) => {
 
 
 // UPDATE a code of practice by ID
-router.put('/:id', async (req, res) => {
-  try {
-    const { title, description } = req.body;
-    const [result] = await db.execute(
-      'UPDATE cop SET title = ?, description = ? WHERE id = ?',
-      [title, description, req.params.id]
-    );
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Not found' });
-    res.json({ id: req.params.id, title, description });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+router.get("/:id", async (req, res) => {
+  let id = req.params.id;
+  let codeOfPractice = await codeOfPractice.findByPk(id);
+  res.json(codeOfPractice);
 });
 
 // DELETE a code of practice by ID
